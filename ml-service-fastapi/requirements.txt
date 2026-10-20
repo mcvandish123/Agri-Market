@@ -1,2 +1,12 @@
-fastapi
-uvicorn[standard]
+# Keep major versions aligned with the Colab environment used for the thesis.
+numpy>=2.0,<3
+pandas>=2.2,<3
+scipy>=1.13
+statsmodels>=0.14
+scikit-learn>=1.5
+xgboost>=2.1
+tensorflow>=2.17      # only needed for the LSTM refit
+psycopg[binary]>=3.2
+SQLAlchemy>=2.0
+python-dotenv>=1.0
+pytest>=8.0

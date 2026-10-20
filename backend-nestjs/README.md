@@ -56,6 +56,12 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+## database
+```bash
+npx @nestjs/cli new backend --package-manager npm --skip-git
+cd backend
+npm install @supabase/supabase-js @nestjs/config class-validator class-transformer
+```
 
 ## Deployment
 
@@ -82,6 +88,14 @@ Check out a few resources that may come in handy when working with NestJS:
 - Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
 - To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
 - Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+
+## Implementation
+
+Implement the endpoints in `../docs/api.md`. Modules: `prices`, `forecast`,
+`regime`, `metrics`, `backtest`, `admin`. A single `SupabaseService` creates the
+client from `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; nothing else reads
+those variables. Admin routes use a guard that checks the `x-admin-key` header
+against `ADMIN_API_KEY`.
 
 ## Support
 
