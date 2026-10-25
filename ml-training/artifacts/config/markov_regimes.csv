@@ -1,0 +1,3 @@
+regime,mean change (%),std. dev. (%),stay probability,expected duration (months)
+low volatility,0.693,3.6052,0.8634,7.3211
+high volatility,0.5766,13.5231,0.9253,13.3898

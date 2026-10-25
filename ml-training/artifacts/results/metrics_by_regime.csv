@@ -1,0 +1,9 @@
+,MAE,MAE,RMSE,RMSE
+regime,high volatility,low volatility,high volatility,low volatility
+model,,,,
+LSTM,6.984,1.649,7.766,2.381
+MS-XGBoost-RFE,5.581,1.195,7.159,1.482
+Naive,5.166,0.986,6.472,1.297
+SARIMAX,5.75,1.321,7.256,1.741
+XGBoost-Full,6.451,1.308,7.756,1.536
+XGBoost-RFE,6.083,1.186,7.181,1.392

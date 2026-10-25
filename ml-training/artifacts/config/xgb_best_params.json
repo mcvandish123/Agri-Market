@@ -1,0 +1,32 @@
+{
+ "XGBoost-Full": {
+  "n_estimators": 169,
+  "max_depth": 6,
+  "learning_rate": 0.03273420562003907,
+  "subsample": 0.7646393258784021,
+  "colsample_bytree": 0.7053601715633169,
+  "min_child_weight": 5,
+  "reg_alpha": 0.001511606665214771,
+  "reg_lambda": 0.01927048049647164
+ },
+ "XGBoost-RFE": {
+  "n_estimators": 98,
+  "max_depth": 6,
+  "learning_rate": 0.19663531438424608,
+  "subsample": 0.8358804295742676,
+  "colsample_bytree": 0.6306549004900219,
+  "min_child_weight": 1,
+  "reg_alpha": 0.005566826578953076,
+  "reg_lambda": 0.012259776171297265
+ },
+ "MS-XGBoost-RFE": {
+  "n_estimators": 235,
+  "max_depth": 6,
+  "learning_rate": 0.11100191539064455,
+  "subsample": 0.9845525440519376,
+  "colsample_bytree": 0.6830347242613259,
+  "min_child_weight": 1,
+  "reg_alpha": 0.6716397794705112,
+  "reg_lambda": 0.02712219229875745
+ }
+}
