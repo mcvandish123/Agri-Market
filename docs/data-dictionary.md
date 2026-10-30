@@ -36,7 +36,7 @@ Data notes:
 | `Temp_C_t1`, `RH_pct_t1`, `Rain_mm_t1` | previous month's weather | PAGASA |
 | `Rain_mm_Lag12` | rainfall in month t-12 | PAGASA |
 | `VPD_kPa_t1` | VPD_(t-1), VPD = 0.61078 * exp(17.27*T/(T+237.3)) * (1 - RH/100) | computed |
-| `VPDanom_12mSum_t1` | sum of (VPD - baseline for that calendar month) over months t-12 .. t-1; baseline = 2015-2018 monthly means (constants in `ml/features.py`) | computed |
+| `VPDanom_12mSum_t1` | sum of (VPD - baseline for that calendar month) over months t-12 .. t-1; baseline = 2015-2018 monthly means (constants in `ml-service-fastapi/features.py`) | computed |
 | `CPI_MoM_pct_t1` | percent change of CPI from t-2 to t-1 | PSA |
 | `ExportUV_USDkg_prevYear` | export unit value of the previous calendar year (latest available year if not yet published) | PSA IMTS |
 | `<Oil>_USDmt_t1` | previous month's world price, for CoconutOil, PalmOil, PalmKernelOil, SoybeanOil | World Bank |
@@ -46,8 +46,8 @@ Data notes:
 | `CoconutOil_PHPkg_t1` | coconut oil USD/mt * PHP/USD / 1000, month t-1 | computed |
 
 Feature columns in the `features` table are the same names in lower case.
-`ml/tests/test_features.py` checks that `ml/features.py` reproduces the thesis
-dataset (`ml/tests/fixtures/copra_training_dataset.csv`) to within 0.001.
+`ml-service-fastapi/tests/test_features.py` checks that `ml-service-fastapi/features.py` reproduces the thesis
+dataset (`ml-service-fastapi/tests/fixtures/copra_training_dataset.csv`) to within 0.001.
 
 ## Thesis split
 
