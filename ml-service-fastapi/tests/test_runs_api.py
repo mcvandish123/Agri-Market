@@ -15,7 +15,9 @@ AUTH = {"x-ml-key": KEY}
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
+    # The runner's wiring is tested here; trained models are covered in test_forecast.py
+    monkeypatch.setattr(forecast, "MODELS", ("naive",))
     settings = Settings(ml_api_key=KEY, csv_dir=FIX)
     app.dependency_overrides[get_settings] = lambda: settings
     runs.clear_jobs()

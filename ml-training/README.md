@@ -13,7 +13,7 @@ job in `ml-service-fastapi/forecast.py`. Do not retrain or re-tune here.
 | `lstm_best_params.json` | LSTM hyperparameters (units, layers, dropout, lookback `L`, learning rate, epochs) |
 | `rfe_ranking.csv` | RFE rank for all 25 features (only `CoconutOil_USDmt_t1` dropped) |
 | `sarimax_top10.csv` | Ten lowest-AIC SARIMAX orders |
-| `markov_regimes.csv` | Two-regime Markov Switching estimates on the training period |
+| `markov_regimes.csv` | Two-regime Markov Switching estimates on the training returns (Feb 2019 - Dec 2023, 59 months) |
 
 ## artifacts/models/
 
@@ -21,6 +21,17 @@ Fitted models from the training period: `model_SARIMAX.pkl`,
 `model_XGBoost-Full.joblib`, `model_XGBoost-RFE.joblib`,
 `model_MS-XGBoost-RFE.joblib`, `model_LSTM_seed0.keras`. Per D4 the monthly job
 refits on all observed months, so these are kept for reference and checks only.
+
+The `.joblib` files fail to unpickle with xgboost 3.4.1 on Windows ("input
+stream corrupted"), although their contents are intact. The `model_*.json`
+files are the same boosters in xgboost's native format, exported from the
+`.joblib` payload on 2026-10-30; `ml-service-fastapi/tests/test_thesis_models.py`
+uses them and checks they reproduce `results/test_forecasts.csv`.
+
+The SARIMAX model is fitted on the log price (the endog is named
+`Target_Price_PHPkg` but holds ln P), with standardized exog. The LSTM input
+shape is (3, 24): 3 months of the 24 RFE features. See
+`docs/data-dictionary.md`, "Model setup".
 
 ## artifacts/results/ - Chapter 4 results
 

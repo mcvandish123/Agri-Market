@@ -1,11 +1,12 @@
-# Keep major versions aligned with the Colab environment used for the thesis.
+# Keep major versions aligned with the Colab environment used for the thesis
+# (ml-training/artifacts/config/summary.json).
 numpy>=2.0,<3
 pandas>=2.2,<3
 scipy>=1.13
-statsmodels>=0.14
-scikit-learn>=1.5
-xgboost>=2.1
-tensorflow>=2.17      # only needed for the LSTM refit
+statsmodels>=0.15,<0.16   # SARIMAX + Markov Switching; the saved SARIMAX pickle is 0.15
+xgboost>=3.4,<4
+tensorflow>=2.20,<2.21    # LSTM refit
+keras>=3.13,<3.14         # the saved LSTM was written by keras 3.13.2
 psycopg[binary]>=3.2
 SQLAlchemy>=2.0
 python-dotenv>=1.0

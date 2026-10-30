@@ -17,16 +17,10 @@ Learning Forecasting for Farmgate Copra Price Forecasting in the Davao Region".
    `supabase/migrations/20261020000000_init.sql`, then `supabase/seed.sql`.
    Check: `select count(*) from monthly_data;` returns 96.
 2. Set up the ML job (see `ml-service-fastapi/README.md`) and run
-   `python -m pytest` in `ml-service-fastapi/` (10 tests pass).
+   `python -m pytest` in `ml-service-fastapi/` (32 tests pass).
 3. Open the folder in Claude Code and follow "Next up" in `docs/progress.md`.
 
 ## Suggested Claude Code prompts
-
-Next ML session:
-> Read docs/progress.md. Add the SARIMAX, XGBoost and LSTM refits to
-> ml-service-fastapi/forecast.py per decision D4, using the settings in
-> ml-training/artifacts/config/. Check them against
-> ml-training/artifacts/results/test_forecasts.csv.
 
 Backend:
 > Read docs/api.md. In backend-nestjs/, implement GET /health, /prices/latest
