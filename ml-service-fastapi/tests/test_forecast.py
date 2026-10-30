@@ -98,6 +98,14 @@ def test_all_models_forecast_thesis_start(all_models):
                        trained["predicted_price"])
 
 
+def test_forecast_rows_store_null_not_nan(all_models):
+    rows = {r["model_name"]: r for r in forecast.forecast_rows(all_models)}
+    assert rows["naive"]["predicted_logreturn"] is None    # schema: NULL for naive
+    assert rows["naive"]["is_reference"] is True
+    assert isinstance(rows["sarimax"]["predicted_logreturn"], float)
+    assert rows["sarimax"]["target"] == pd.Timestamp("2024-01-01").date()
+
+
 def test_refits_are_repeatable(raw, all_models):
     again = run_forecast(*raw, through="2023-12-01", models=("naive", "xgboost_rfe", "lstm"))
     a = all_models.forecasts.set_index("model_name")["predicted_price"]

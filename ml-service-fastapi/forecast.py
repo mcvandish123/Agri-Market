@@ -243,6 +243,16 @@ def code_version() -> str | None:
         return None
 
 
+def forecast_rows(result: ForecastResult) -> list[dict]:
+    """Rows for public.forecasts. NaN becomes None: Postgres numeric would store NaN, not NULL."""
+    return [{"target": result.target_month.date(), "model_name": f["model_name"],
+             "predicted_price": round(float(f["predicted_price"]), 4),
+             "predicted_logreturn": None if pd.isna(f["predicted_logreturn"])
+             else float(f["predicted_logreturn"]),
+             "is_reference": bool(f["is_reference"])}
+            for f in result.forecasts.to_dict("records")]
+
+
 def write_results(engine, result: ForecastResult, run_kind: str = "live") -> str:
     """Insert one model run and its rows. The run is marked failed if any insert fails."""
     from sqlalchemy import text
@@ -260,9 +270,7 @@ def write_results(engine, result: ForecastResult, run_kind: str = "live") -> str
                 "predicted_price, predicted_logreturn, is_reference) "
                 "values (:run_id, :target, :model_name, :predicted_price, "
                 ":predicted_logreturn, :is_reference)"),
-                [{"run_id": run_id, "target": result.target_month.date(),
-                  **f, "predicted_price": round(f["predicted_price"], 4)}
-                 for f in result.forecasts.to_dict("records")])
+                [{"run_id": run_id, **row} for row in forecast_rows(result)])
             conn.execute(text(
                 "insert into public.regime_probabilities (run_id, month, p_high_volatility) "
                 "values (:run_id, :month, :p)"),

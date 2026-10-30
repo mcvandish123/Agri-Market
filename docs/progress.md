@@ -64,15 +64,22 @@ Update this file at the end of every work session.
       (p = 0.510). 32 tests pass (about 20 s). Requirements pinned to the Colab
       major versions (statsmodels 0.15, xgboost 3.4, tensorflow 2.20, keras
       3.13); scikit-learn dropped (unused).
+- [x] 2026-10-30: committed `65c24cb`; live run `9a6fa3b9-...` written with
+      all six models (code_version `65c24cb`, no notes): naive 60.28
+      (reference), sarimax 60.43, xgboost_full 58.29, xgboost_rfe 59.12,
+      ms_xgboost_rfe 60.01, lstm 61.18 for 2026-01; 83 regime rows
+      (2019-02 to 2025-12), Dec 2025 high (p = 0.5097). Bug found and fixed:
+      the naive `predicted_logreturn` was stored as NaN instead of NULL
+      (pandas turned None into NaN once other models added floats). Fixed in
+      `forecast_rows()` with a test (33 tests pass); the one stored row was
+      updated to NULL; no NaN left in `forecasts`.
 
 ## Next up
 
-1. Commit, then write a live run with all six models to Supabase (so its
-   `code_version` matches the code).
-2. Implement the read endpoints in `docs/api.md` in `backend-nestjs/`, then
+1. Implement the read endpoints in `docs/api.md` in `backend-nestjs/`, then
    `POST /admin/runs` and `GET /admin/runs/:jobId`, which forward to the ML runner.
-3. Build the Expo app in `frontend-mobile/` (after deciding O1).
-4. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
+2. Build the Expo app in `frontend-mobile/` (after deciding O1).
+3. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
 
 ## Open issues
 
@@ -83,9 +90,12 @@ Update this file at the end of every work session.
   `running` rows as `failed` if it ever happens. Run uvicorn with one worker
   (several workers would each have their own job store and lock).
 - Regime label change: with the thesis sample (returns from Feb 2019) the
-  Dec 2025 regime is high (p = 0.510); the earlier fit from Mar 2019 gave low
-  (p = 0.491). Live run `fada3840-...` in Supabase still has the old fit and
-  naive only, until the next live run.
+  Dec 2025 regime is high (p = 0.510), so the app's typical error is
+  6.47 PHP/kg; the earlier fit from Mar 2019 gave low (p = 0.491). The older
+  live run `fada3840-...` (naive only, old fit) is still in `model_runs` but is
+  no longer the latest.
+- Postgres `numeric` accepts NaN. A check constraint (new migration) could
+  reject NaN in `forecasts` and `regime_probabilities` as a second safeguard.
 - XGBoost refits do not reproduce the saved thesis models even on the same
   training data: deterministic per machine and thread count, but different
   from Colab (xgboost-RFE Jan 2024: 27.37 vs 25.55). Their forecasts are
