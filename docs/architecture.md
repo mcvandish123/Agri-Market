@@ -49,12 +49,20 @@ POST /api/v1/admin/monthly-data  (NestJS)  --->  Supabase: monthly_data
   the latest month's filtered probability of the high-volatility regime decides
   the status shown (high if p > 0.5). Implementation: statsmodels
   `MarkovRegression(k_regimes=2, switching_variance=True)` (mean also switches)
-  on log returns in percent; "high" is the regime with the larger variance. Each
-  run stores the filtered probability for every observed month.
+  on log returns in percent, starting at the first valid return (Feb 2019, as in
+  the thesis); "high" is the regime with the larger variance. Each run stores
+  the filtered probability for every observed month.
 - **D4. Trained models are refit each run with fixed hyperparameters.** SARIMAX,
   XGBoost and LSTM are refit on all observed months using the hyperparameters
   chosen in the thesis (no re-tuning). Their forecasts are stored for
   transparency and comparison screens only. (Confirm with adviser.)
+  Model setup per model: `docs/data-dictionary.md`, "Model setup". A refit on
+  the thesis training period reproduces SARIMAX exactly; XGBoost and LSTM refits
+  differ from the saved thesis models (random number generation differs between
+  machines and library builds), so their monthly forecasts are not the thesis
+  models' forecasts. If a trained model fails, it is skipped and named in
+  `model_runs.notes`; the run still succeeds, because only the naive reference
+  is required.
 - **D5. Error band from thesis metrics.** Typical error = naive test RMSE in the
   current regime (1.30 PHP/kg low, 6.47 PHP/kg high), read from `model_metrics`.
 - **D6. Export unit value fallback.** PSA annual trade data arrive late. If the

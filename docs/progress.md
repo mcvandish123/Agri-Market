@@ -45,18 +45,41 @@ Update this file at the end of every work session.
       shows no differences. RLS on all 7 tables, no policies. Live run
       `fada3840-...` written again after the seed reset (naive 60.28 for
       2026-01, 82 regime rows).
+- [x] 2026-10-30: committed on branch `ml-forecast-job` (`5357cb7`).
+- [x] 2026-10-30: SARIMAX, XGBoost (Full, RFE, MS-RFE) and LSTM refits in
+      `forecast.py` (D4). Model setup recovered from the saved thesis models
+      and documented in `docs/data-dictionary.md` ("Model setup"):
+      SARIMAX on ln P with standardized exog; XGBoost on r_t, seed 42;
+      `MS_Prob_t1` = lagged filtered regime probability; LSTM on 3-month
+      windows of standardized RFE features with a standardized target.
+      `tests/test_thesis_models.py`: the saved XGBoost (via exported `.json`)
+      and SARIMAX models reproduce all 24 Chapter 4 test forecasts to within
+      0.001 PHP/kg. Regime fit now starts at the first valid return (Feb 2019),
+      which reproduces `markov_regimes.csv` (sd 3.605 / 13.524, stay 0.863 /
+      0.925). Refit with data through 2023-12, Jan 2024 vs thesis: sarimax
+      27.39 (27.39), ms_xgboost_rfe 25.73 (25.73), xgboost_full 27.36 (27.30),
+      xgboost_rfe 27.37 (25.55), lstm 27.76 (27.34). On Supabase (through
+      2025-12), Jan 2026: naive 60.28, sarimax 60.43, xgboost_full 58.29,
+      xgboost_rfe 59.12, ms_xgboost_rfe 60.01, lstm 61.18; regime high
+      (p = 0.510). 32 tests pass (about 20 s). Requirements pinned to the Colab
+      major versions (statsmodels 0.15, xgboost 3.4, tensorflow 2.20, keras
+      3.13); scikit-learn dropped (unused).
+- [x] 2026-10-30: committed `65c24cb`; live run `9a6fa3b9-...` written with
+      all six models (code_version `65c24cb`, no notes): naive 60.28
+      (reference), sarimax 60.43, xgboost_full 58.29, xgboost_rfe 59.12,
+      ms_xgboost_rfe 60.01, lstm 61.18 for 2026-01; 83 regime rows
+      (2019-02 to 2025-12), Dec 2025 high (p = 0.5097). Bug found and fixed:
+      the naive `predicted_logreturn` was stored as NaN instead of NULL
+      (pandas turned None into NaN once other models added floats). Fixed in
+      `forecast_rows()` with a test (33 tests pass); the one stored row was
+      updated to NULL; no NaN left in `forecasts`.
 
 ## Next up
 
-1. Commit the work so far (live runs record the git commit as `code_version`).
-2. Add SARIMAX, XGBoost (Full, RFE, MS-RFE) and LSTM refits to `forecast.py`
-   per D4, using `ml-training/artifacts/config/`. Install tensorflow then.
-   Check: `--through 2023-12-01` should come close to the Jan 2024 row of
-   `ml-training/artifacts/results/test_forecasts.csv`.
-3. Implement the read endpoints in `docs/api.md` in `backend-nestjs/`, then
+1. Implement the read endpoints in `docs/api.md` in `backend-nestjs/`, then
    `POST /admin/runs` and `GET /admin/runs/:jobId`, which forward to the ML runner.
-4. Build the Expo app in `frontend-mobile/` (after deciding O1).
-5. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
+2. Build the Expo app in `frontend-mobile/` (after deciding O1).
+3. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
 
 ## Open issues
 
@@ -66,14 +89,27 @@ Update this file at the end of every work session.
   leaves its `model_runs` row in `running`. Fine at monthly cadence; mark stale
   `running` rows as `failed` if it ever happens. Run uvicorn with one worker
   (several workers would each have their own job store and lock).
-- The live run `fada3840-...` records `code_version` = commit `21be1ff`, but
-  the code that produced it was uncommitted at that time.
+- Regime label change: with the thesis sample (returns from Feb 2019) the
+  Dec 2025 regime is high (p = 0.510), so the app's typical error is
+  6.47 PHP/kg; the earlier fit from Mar 2019 gave low (p = 0.491). The older
+  live run `fada3840-...` (naive only, old fit) is still in `model_runs` but is
+  no longer the latest.
+- Postgres `numeric` accepts NaN. A check constraint (new migration) could
+  reject NaN in `forecasts` and `regime_probabilities` as a second safeguard.
+- XGBoost refits do not reproduce the saved thesis models even on the same
+  training data: deterministic per machine and thread count, but different
+  from Colab (xgboost-RFE Jan 2024: 27.37 vs 25.55). Their forecasts are
+  comparison only (D4); mention this when presenting D4 to the adviser.
+- LSTM: the saved seed-0 model gets within 1-2 PHP/kg of the thesis LSTM test
+  forecasts but not exactly; the thesis may average several seeds, or the
+  scaler was fitted on a train/validation split. Check the notebook (number of
+  seeds, scaler, validation split, batch size) and adjust `fit_lstm`.
+- The `.joblib` XGBoost files do not unpickle with xgboost 3.4.1 on Windows;
+  native `.json` exports sit next to them (`ml-training/README.md`).
+- Deploying the job or the FastAPI runner must include `ml-training/` (the
+  model settings are read from `ml-training/artifacts/config/summary.json`).
 - Live writes through the FastAPI runner are tested with a mocked database;
   the same `write_results` path is verified on Supabase through the CLI.
-- Markov Switching on the training period gives sd 3.60% / 13.69%, stay prob.
-  0.861 / 0.922. Thesis (`markov_regimes.csv`): 3.61% / 13.52%, 0.863 / 0.925.
-  Close but not identical; check the notebook's exact settings and the
-  statsmodels version (Colab 0.15).
 - The `features` table is not written by `forecast.py`: `features.month` has a
   foreign key to `monthly_data`, so the live (not yet observed) month cannot be
   inserted. Needs a new migration if live feature rows should be stored.

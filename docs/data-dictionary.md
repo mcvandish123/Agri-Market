@@ -55,6 +55,34 @@ dataset (`ml-service-fastapi/tests/fixtures/copra_training_dataset.csv`) to with
 - Test: January 2024 - December 2025 (24 months)
 - Live rows (`split = 'live'`): months after December 2025.
 
+## Model setup (as in the thesis)
+
+Recovered from the saved models in `ml-training/artifacts/models/` and checked
+by `ml-service-fastapi/tests/test_thesis_models.py` (the saved models reproduce
+the Chapter 4 test forecasts to within 0.001 PHP/kg). Settings come from
+`ml-training/artifacts/config/summary.json`. Forecasts are for month t;
+"train" = all rows the model is fitted on.
+
+| Model | Target | Inputs | Price forecast |
+|---|---|---|---|
+| naive | - | - | P_(t-1) |
+| Markov Switching | r_t in percent, from Feb 2019 (first valid return) | 2 regimes, switching mean and variance | - |
+| sarimax | ln P_t | ARIMA(0,1,0), no trend; 5 exog (`sarimax_exog`) standardized with train mean / population std | exp(forecast) |
+| xgboost_full | r_t | all 25 features, unscaled | P_(t-1) * exp(r_hat) |
+| xgboost_rfe | r_t | 24 RFE features (`rfe_features`), unscaled | P_(t-1) * exp(r_hat) |
+| ms_xgboost_rfe | r_t | 24 RFE features + `MS_Prob_t1` | P_(t-1) * exp(r_hat) |
+| lstm | r_t standardized | windows of the last L = 3 months of the 24 RFE features, standardized | P_(t-1) * exp(r_hat) |
+
+- `MS_Prob_t1` = filtered P(high volatility) of month t-1. "High" is the regime
+  with the larger variance.
+- XGBoost: `random_state = 42`, `tree_method = hist`; the monthly job uses
+  `n_jobs = 1` so a refit is repeatable on one machine.
+- LSTM: 1 LSTM layer (64 units, dropout 0.149), Dense(1), Adam (lr 0.00368),
+  MSE, 12 epochs, batch size 32, seed 0.
+- In the thesis every model was fitted once on the training period and
+  predicted all 24 test months. The monthly job refits on all observed months
+  instead (decision D4).
+
 ## Thesis results used by the system (Chapter 4)
 
 | Model | Test RMSE | Test MAPE (%) | RMSE low-volatility | RMSE high-volatility |
