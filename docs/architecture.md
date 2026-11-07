@@ -28,7 +28,7 @@ POST /api/v1/admin/monthly-data  (NestJS)  --->  Supabase: monthly_data
 | Component | Tech | Responsibility |
 |---|---|---|
 | Database | Supabase (Postgres 15+) | Raw monthly data, features, runs, forecasts, regimes, metrics |
-| ML job | Python 3.11+, pandas, statsmodels, xgboost, tensorflow | Feature pipeline, monthly forecasts, regime probabilities |
+| ML job | Python 3.11-3.13 (TensorFlow 2.20 has no 3.14 build), pandas, statsmodels, xgboost, tensorflow | Feature pipeline, monthly forecasts, regime probabilities |
 | API | NestJS (TypeScript), @supabase/supabase-js | Read endpoints for the app; admin upload of monthly data |
 | App | React Native with Expo | Current price, reference forecast, volatility status, history |
 | ML job runner | FastAPI (`ml-service-fastapi/app/`) | Starts `forecast.py` on request and reports job status (D9) |
@@ -103,4 +103,5 @@ POST /api/v1/admin/monthly-data  (NestJS)  --->  Supabase: monthly_data
 | `ML_SERVICE_URL` | backend | Base URL of the FastAPI runner |
 | `ML_CSV_DIR` | ml (FastAPI), optional | Local development: read fixture CSVs instead of Supabase (dry runs only) |
 | `ADMIN_API_KEY` | backend | Required header for admin endpoints |
+| `PORT` | backend, optional | HTTP port for NestJS (default 3000) |
 | `EXPO_PUBLIC_API_URL` | mobile | Base URL of the NestJS API (public, no secrets) |

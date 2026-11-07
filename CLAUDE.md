@@ -31,7 +31,9 @@ Read on demand (not loaded every session): `docs/api.md` (endpoint contract),
 - ML: `cd ml-service-fastapi && .venv/Scripts/python -m pytest` |
   `python forecast.py --dry-run` | `python forecast.py --csv tests/fixtures --through 2023-12-01 --dry-run` |
   `.venv/Scripts/python -m uvicorn app.main:app --reload`
-- Backend: `cd backend-nestjs && npm run start:dev` | `npm test`
+  (Windows paths; on macOS use `.venv/bin/python`, create the venv with
+  `python3.13 -m venv .venv` and run `brew install libomp` for XGBoost)
+- Backend: `cd backend-nestjs && npm run start:dev` | `npm test` | `npm run test:e2e` (reads the real Supabase)
 - Mobile: `cd frontend-mobile && npx expo start`
 - Database: apply `supabase/migrations/*.sql`, then `supabase/seed.sql`, in the Supabase SQL Editor.
 

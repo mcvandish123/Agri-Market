@@ -7,20 +7,26 @@ Prices are PHP/kg rounded to 2 decimals. Errors use NestJS default shape
 ## Public read endpoints
 
 ### GET /health
-`{ "status": "ok", "database": "ok" }`
+`{ "status": "ok", "database": "ok" }`. Returns 503 with
+`{ "status": "error", "database": "error" }` if Supabase cannot be read.
 
 ### GET /prices/latest
 Latest observed regional farmgate price and change from the previous month.
 ```json
-{ "month": "2025-12-01", "pricePhpKg": 60.28, "previousPricePhpKg": 63.03, "changePct": -4.36 }
+{ "month": "2025-12-01", "pricePhpKg": 60.28, "previousPricePhpKg": 63.03, "changePct": -4.37 }
 ```
-Source: view `price_history` (last two rows).
+Source: view `price_history` (last two rows). `changePct` is computed from the
+unrounded prices (63.033333), so it can differ by 0.01 from one computed with the
+rounded values. `previousPricePhpKg` and `changePct` are `null` if only one month
+is observed; 404 if none.
 
 ### GET /prices/history?from=2019-01-01&to=2025-12-01
 ```json
 [ { "month": "2019-01-01", "pricePhpKg": 18.76 }, ... ]
 ```
-`from` and `to` optional; default is the full history. Source: view `price_history`.
+`from` and `to` optional, inclusive, `YYYY-MM-01`; default is the full history.
+400 if either is not a first-of-month date or `from` is after `to`.
+Source: view `price_history`.
 
 ### GET /forecast/latest
 The forecast for the month after the latest observed month, from the latest
@@ -42,20 +48,46 @@ succeeded `live` run.
 Rules: `reference` is the row with `is_reference = true`. `typicalError` is the
 naive RMSE for the current regime from `model_metrics`
 (`test_low_volatility` or `test_high_volatility`); `low`/`high` are reference ± that value.
-Returns 404 if no live run has succeeded yet.
+`models` lists every model in the run, always in the order naive, sarimax,
+xgboost_full, xgboost_rfe, ms_xgboost_rfe, lstm (comparison only, rule 2).
+`pHighVolatility` is rounded to 3 decimals; `label` is `high` if it is > 0.5.
+Returns 404 if no live run has succeeded yet; 500 if the run has no naive
+reference forecast or no regime probability for `dataThrough`.
 
 ### GET /regime/history
 Filtered high-volatility probability per month from the latest live run.
-`[ { "month": "2025-12-01", "pHighVolatility": 0.83, "label": "high" }, ... ]`
+`[ { "month": "2025-12-01", "pHighVolatility": 0.51, "label": "high" }, ... ]`
+Oldest first, 3 decimals. 404 if no live run has succeeded yet.
 
 ### GET /metrics
-Rows of `model_metrics`, for the "How accurate is this?" screen.
+Rows of `model_metrics`, for the "How accurate is this?" screen, values as stored.
+Order: model (as in `/forecast/latest`), then `cv`, `test`, `test_low_volatility`,
+`test_high_volatility`.
+```json
+[ { "model": "naive", "evaluationSet": "cv", "rmse": 2.78, "rmseSd": 2.4, "mae": 2.15,
+    "maeSd": 1.86, "mapePct": 6.45, "mapeSd": 4.19, "r2": null, "nMonths": 24 }, ... ]
+```
 
 ### GET /backtest
 The thesis test period (Jan 2024 - Dec 2025): actual price and each model's
-forecast per month, from the `backtest` run joined with `price_history`.
+forecast per month, from the latest succeeded `backtest` run joined with `price_history`.
+```json
+{
+  "dataThrough": "2023-12-01",
+  "referenceModel": "naive",
+  "months": [
+    { "month": "2024-01-01", "actualPricePhpKg": 26.75,
+      "forecasts": [ { "model": "naive", "pricePhpKg": 26.99 }, { "model": "sarimax", "pricePhpKg": 27.39 } ] }
+  ]
+}
+```
+`actualPricePhpKg` is `null` for a month without an observed price. 404 if no
+backtest run is stored.
 
 ## Admin endpoints (header `x-admin-key` required)
+
+Missing or wrong key: 401 (checked before the body is validated). Invalid body:
+400 with one message per problem; unknown fields are rejected.
 
 ### POST /admin/monthly-data
 Upsert one month of raw data into `monthly_data`. Body (camelCase of the table
@@ -63,17 +95,27 @@ columns): `month`, the six area prices, `cpiRegion11`, `tempC`, `rhPct`,
 `rainMm`, the four oil prices, `phpUsd`, optional `sourceNote`. Validate:
 `month` is a first-of-month date, prices > 0, `rhPct` 0-100, `rainMm` >= 0.
 `vpdKpa` is computed server-side with the Tetens equation (same formula as
-`ml-service-fastapi/features.py`). Returns the stored row.
+`ml-service-fastapi/features.py`), rounded to 6 decimals. All fields except
+`sourceNote` are required. An existing month keeps its `priceValid` flag.
+Returns 200 with the stored row in camelCase (including `farmgateRegionalAvg`,
+`vpdKpa`, `priceValid`, `createdAt`, `updatedAt`).
 
 ### POST /admin/annual-exports
-Upsert `{ year, unitValueUsdKg, sourceNote? }`.
+Upsert `{ year, unitValueUsdKg, sourceNote? }` (`year` 2000-2100,
+`unitValueUsdKg` > 0). Returns 200 with the stored row.
 
-### POST /admin/runs (later)
-Body `{ dryRun?: boolean, through?: "YYYY-MM-01" }`. Forwards to the ML runner's
-`POST /runs` (below) with the `x-ml-key` header and returns its job.
+### POST /admin/runs
+Body `{ dryRun?: boolean, through?: "YYYY-MM-01" }` (`dryRun` defaults to
+false). Forwards to the ML runner's `POST /runs` (below) with the `x-ml-key`
+header and returns 202 with its job.
 
-### GET /admin/runs/:jobId (later)
-Forwards to the ML runner's `GET /runs/{jobId}`.
+### GET /admin/runs/:jobId
+Forwards to the ML runner's `GET /runs/{jobId}`. `jobId` must be a UUID (400 otherwise).
+
+Runner errors: 400, 404, 409 (a job is already running) and 422 (`through`
+without `dryRun: true`) are passed through with the runner's message in the
+NestJS error shape. 401/503 from the runner (key missing or mismatched) become
+502; an unreachable runner or no answer within 10 s gives 503.
 
 # ML job runner contract (FastAPI, decision D9)
 

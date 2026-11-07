@@ -101,9 +101,12 @@ def regime_probabilities(log_returns: pd.Series) -> pd.Series:
     all observed log returns (in percent, which keeps the optimizer stable).
     Returns the filtered probability of the high-volatility regime, i.e. the
     regime with the larger variance; regime numbering from statsmodels is arbitrary.
+    Clipped to [0, 1]: on some platforms (e.g. macOS arm64) a near-certain month
+    comes out as 1 + 2e-16 from floating-point rounding.
     """
     res, high = fit_regimes(log_returns)
-    return pd.Series(np.asarray(res.filtered_marginal_probabilities)[:, high],
+    p = np.clip(np.asarray(res.filtered_marginal_probabilities)[:, high], 0.0, 1.0)
+    return pd.Series(p,
                      index=res.model.data.row_labels, name="p_high_volatility")
 
 

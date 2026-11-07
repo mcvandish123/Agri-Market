@@ -74,15 +74,81 @@ Update this file at the end of every work session.
       `forecast_rows()` with a test (33 tests pass); the one stored row was
       updated to NULL; no NaN left in `forecasts`.
 
+- [x] 2026-11-07: NestJS foundation (branch `backend-features`):
+      `@nestjs/config` 4 (the NestJS 11 line; 12 is ESM-only and breaks Jest)
+      with startup validation of every env var (`src/config/env.validation.ts`,
+      names missing keys, never prints values); global Supabase client with the
+      service-role key (`src/supabase/supabase.module.ts`, token
+      `SUPABASE_CLIENT`); `AdminKeyGuard` for `x-admin-key` (constant-time
+      compare, 401); global prefix `/api/v1`; `GET /api/v1/health` reads
+      `monthly_data`. Hello World scaffold removed; TypeScript `strict` on.
+      11 unit tests + 1 e2e test (real Supabase, read only) pass; lint clean.
+      Local `.env` files now point at the shared Supabase project
+      (`zuzvkyoiqlgtgtjbzfpv`); row counts match the seed plus live runs.
+
+- [x] 2026-11-07: ML job set up on macOS (arm64, Python 3.13 venv; default
+      `python3` is 3.14, too new for TensorFlow 2.20). Needs `brew install
+      libomp` for XGBoost. Fixed two bugs a fresh install exposed:
+      `scikit-learn` was missing from `requirements.txt` (`XGBRegressor`
+      needs it; the three XGBoost models were silently skipped), and regime
+      probabilities could be 1 + 2e-16 on macOS (now clipped to [0, 1] in
+      `regime_probabilities`). 33 tests pass. Dry run on Supabase: naive 60.28,
+      sarimax 60.43, lstm 61.18, p(high) = 0.510 (same as the stored live run);
+      XGBoost differs by machine as expected (full 59.08, rfe 59.94, ms 60.67
+      vs 58.29 / 59.12 / 60.01 on Windows).
+
+- [x] 2026-11-07: NestJS request lifecycle: `configureApp()` in
+      `src/app.setup.ts` (used by `main.ts` and the e2e test): `/api/v1`
+      prefix, global `ValidationPipe` (whitelist, forbid unknown fields,
+      transform; `class-validator` / `class-transformer`), shutdown hooks.
+      `RequestLoggerMiddleware` logs method, path, status and duration only
+      (no headers, bodies or query strings). `unwrap()` in
+      `src/supabase/supabase-result.ts`: use it on every Supabase query; it
+      logs the real error server-side and returns a generic 500. 22 unit
+      tests + 1 e2e pass; lint clean. Health check takes about 400 ms (the
+      Supabase project is in eu-west-1).
+
+- [x] 2026-11-07: all endpoints in `docs/api.md` implemented in
+      `backend-nestjs/`. Typed Supabase client (`src/supabase/database.types.ts`,
+      hand-written from the migration in the `supabase gen types` layout).
+      Read: `GET /prices/latest`, `/prices/history`, `/forecast/latest`
+      (naive reference, regime, typical error = naive RMSE for the regime from
+      `model_metrics`), `/regime/history`, `/metrics`, `/backtest`. Admin
+      (`AdminKeyGuard`): `POST /admin/monthly-data` (VPD computed server-side,
+      same Tetens formula, matches the stored Dec 2025 value 0.928497),
+      `POST /admin/annual-exports`, `POST /admin/runs` and
+      `GET /admin/runs/:jobId` (forward to the FastAPI runner; 400/404/409/422
+      passed through, runner auth errors -> 502, unreachable -> 503, 10 s
+      timeout). Checked on Supabase: Jan 2026 naive 60.28, high (0.510),
+      typical error 6.47 (53.81-66.75), 24 backtest months; a dry run started
+      through NestJS reproduced Jan 2024 naive 26.99. 49 unit tests (in-memory
+      fake Supabase, `src/testing/`) + 7 e2e tests (real Supabase, read only).
+      `docs/api.md` now gives every response shape and error.
+
 ## Next up
 
-1. Implement the read endpoints in `docs/api.md` in `backend-nestjs/`, then
-   `POST /admin/runs` and `GET /admin/runs/:jobId`, which forward to the ML runner.
-2. Build the Expo app in `frontend-mobile/` (after deciding O1).
-3. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
+1. Build the Expo app in `frontend-mobile/` (after deciding O1); it only needs
+   the read endpoints. If O1 = Expo web, enable CORS in `configureApp`.
+2. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
+3. Before deploying (O2): rate limiting and `helmet` on the API.
 
 ## Open issues
 
+- `/forecast/latest` does not flag a stale forecast: after new monthly data is
+  entered but before the next run, `targetMonth` is already observed. The app
+  can compare `dataThrough` with `/prices/latest`; or add an `isStale` field.
+- `database.types.ts` is hand-written; regenerate or update it with every
+  migration (`supabase gen types typescript` needs the Supabase CLI).
+- `POST /admin/monthly-data` has not been run against Supabase (tests use a
+  fake database, so the shared data stays unchanged). Try it once on a test
+  month with your friend, then delete that row.
+
+- Secrets (service-role key, DB password, admin and ML keys) were shared in a
+  chat on 2026-11-07; rotate them and share new ones via a password manager.
+- macOS setup: `python3.13 -m venv .venv`, `brew install libomp`; the venv path
+  is `.venv/bin/`, not `.venv/Scripts/` (Windows).
+- Live runs should come from one machine (or GitHub Actions): XGBoost refits
+  differ between Mac and Windows, so the comparison forecasts would change.
 - O1: web dashboard vs mobile app (see `docs/architecture.md`).
 - D4 (refitting trained models monthly) needs adviser confirmation.
 - FastAPI runner jobs live in memory: a restart while a live job is running
