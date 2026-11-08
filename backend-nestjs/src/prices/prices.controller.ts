@@ -2,6 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { IsOptional } from 'class-validator';
 import { IsFirstOfMonth } from '../common/first-of-month';
 import {
+  AreaPricesResponse,
   LatestPriceResponse,
   PricePoint,
   PricesService,
@@ -24,6 +25,11 @@ export class PricesController {
   @Get('latest')
   latest(): Promise<LatestPriceResponse> {
     return this.prices.latest();
+  }
+
+  @Get('areas')
+  areas(): Promise<AreaPricesResponse> {
+    return this.prices.areas();
   }
 
   @Get('history')

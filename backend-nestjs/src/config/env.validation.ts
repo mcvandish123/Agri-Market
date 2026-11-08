@@ -10,6 +10,8 @@ export interface Env {
   ML_API_KEY: string;
   ML_SERVICE_URL: string;
   PORT: number;
+  /** Browser origins allowed to call the API (Expo web preview). Empty = CORS off. */
+  CORS_ORIGINS: string[];
 }
 
 const REQUIRED = [
@@ -43,6 +45,15 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     problems.push('PORT must be an integer between 1 and 65535');
   }
 
+  const corsOrigins = value('CORS_ORIGINS')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  for (const o of corsOrigins) {
+    if (!URL.canParse(o))
+      problems.push('CORS_ORIGINS must be comma-separated URLs');
+  }
+
   if (problems.length > 0) {
     throw new Error(
       `Invalid environment (check backend-nestjs/.env against .env.example): ${problems.join('; ')}`,
@@ -56,5 +67,6 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     ML_API_KEY: value('ML_API_KEY'),
     ML_SERVICE_URL: value('ML_SERVICE_URL').replace(/\/+$/, ''),
     PORT: port,
+    CORS_ORIGINS: corsOrigins,
   };
 }

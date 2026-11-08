@@ -70,4 +70,53 @@ describe('PricesService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
+
+  describe('areas', () => {
+    const month = (m: string, base: number, valid = true) => ({
+      month: m,
+      price_valid: valid,
+      farmgate_davao_city: base,
+      farmgate_davao_de_oro: base + 1,
+      farmgate_davao_del_norte: base + 2,
+      farmgate_davao_del_sur: base + 3,
+      farmgate_davao_occidental: null,
+      farmgate_davao_oriental: base + 5,
+    });
+    const areaService = (rows: Record<string, unknown>[]) =>
+      new PricesService(fakeSupabase({ monthly_data: rows }).client as Db);
+
+    it('returns each area for the latest valid month with its change', async () => {
+      const res = await areaService([
+        month('2025-10-01', 10),
+        month('2025-12-01', 60.84),
+        month('2025-11-01', 63.2),
+        month('2026-01-01', 99, false), // flagged invalid: ignored
+      ]).areas();
+      expect(res.month).toBe('2025-12-01');
+      expect(res.previousMonth).toBe('2025-11-01');
+      expect(res.areas.map((a) => a.area)).toEqual([
+        'davao_city',
+        'davao_de_oro',
+        'davao_del_norte',
+        'davao_del_sur',
+        'davao_occidental',
+        'davao_oriental',
+      ]);
+      expect(res.areas[0]).toEqual({
+        area: 'davao_city',
+        name: 'Davao City',
+        pricePhpKg: 60.84,
+        previousPricePhpKg: 63.2,
+        changePct: -3.73,
+      });
+      // A missing area price gives nulls, not an error
+      expect(res.areas[4]).toMatchObject({ pricePhpKg: null, changePct: null });
+    });
+
+    it('returns 404 with no valid month', async () => {
+      await expect(areaService([]).areas()).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
 });

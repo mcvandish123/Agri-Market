@@ -46,6 +46,19 @@ describe('API (e2e)', () => {
     });
   });
 
+  it('GET /prices/areas: six areas for the latest month', async () => {
+    const res = await http().get('/api/v1/prices/areas').expect(200);
+    const body = res.body as { month: string; areas: { name: string }[] };
+    expect(body.areas.map((a) => a.name)).toEqual([
+      'Davao City',
+      'Davao de Oro',
+      'Davao del Norte',
+      'Davao del Sur',
+      'Davao Occidental',
+      'Davao Oriental',
+    ]);
+  });
+
   it('GET /prices/history validates and filters', async () => {
     await http().get('/api/v1/prices/history?from=2025-01-15').expect(400);
     const res = await http()

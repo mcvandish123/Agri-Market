@@ -35,4 +35,17 @@ describe('validateEnv', () => {
       expect((e as Error).message).not.toContain('service-role-test');
     }
   });
+
+  it('parses CORS_ORIGINS (off by default)', () => {
+    expect(validateEnv(valid).CORS_ORIGINS).toEqual([]);
+    expect(
+      validateEnv({
+        ...valid,
+        CORS_ORIGINS: 'http://localhost:8081/, http://192.168.1.5:8081',
+      }).CORS_ORIGINS,
+    ).toEqual(['http://localhost:8081', 'http://192.168.1.5:8081']);
+    expect(() => validateEnv({ ...valid, CORS_ORIGINS: 'nope' })).toThrow(
+      /CORS_ORIGINS/,
+    );
+  });
 });

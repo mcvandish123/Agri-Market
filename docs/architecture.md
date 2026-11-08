@@ -83,11 +83,17 @@ POST /api/v1/admin/monthly-data  (NestJS)  --->  Supabase: monthly_data
   time; the durable record is the `model_runs` row. Replays (`through`) are
   dry runs only, so they can never become the latest live run.
 
+- **D10. Mobile app, one-month regional forecast** (2026-11-08, resolves O1).
+  The client is the Expo (React Native) app in `frontend-mobile/`; the web
+  dashboard is dropped for now (update the manuscript's "mobile-responsive web
+  dashboard" scope). The app shows the one-month-ahead forecast for the Davao
+  Region average only, as evaluated in the thesis: no multi-month horizon, no
+  per-area forecasts, no copra grades (not in the data). Area prices from
+  `GET /prices/areas` are shown as observed context. Expo web is used only to
+  preview during development.
+
 ## Open decisions
 
-- **O1. Web dashboard vs mobile app.** The manuscript says "mobile-responsive web
-  dashboard"; the stack is React Native. Recommended: Expo with web support, so
-  one codebase produces both. Otherwise update the manuscript's scope section.
 - **O2. Hosting** for NestJS and the FastAPI runner (e.g. Render, Railway, Fly.io).
   The runner needs enough memory for the TensorFlow LSTM refit.
 - **O3. Who enters monthly data** and how often PCA prices become available.
@@ -104,4 +110,5 @@ POST /api/v1/admin/monthly-data  (NestJS)  --->  Supabase: monthly_data
 | `ML_CSV_DIR` | ml (FastAPI), optional | Local development: read fixture CSVs instead of Supabase (dry runs only) |
 | `ADMIN_API_KEY` | backend | Required header for admin endpoints |
 | `PORT` | backend, optional | HTTP port for NestJS (default 3000) |
-| `EXPO_PUBLIC_API_URL` | mobile | Base URL of the NestJS API (public, no secrets) |
+| `CORS_ORIGINS` | backend, optional | Comma-separated browser origins for the Expo web preview; CORS is off when unset (the phone app does not need it) |
+| `EXPO_PUBLIC_API_URL` | mobile, optional | Base URL of the NestJS API including `/api/v1` (public, no secrets). Unset in development: the dev server's computer on port 3000 |
