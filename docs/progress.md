@@ -125,14 +125,36 @@ Update this file at the end of every work session.
       fake Supabase, `src/testing/`) + 7 e2e tests (real Supabase, read only).
       `docs/api.md` now gives every response shape and error.
 
+- [x] 2026-11-08: Expo mobile app in `frontend-mobile/` (decision D10, resolves
+      O1: mobile app, no website). Expo Router (SDK 54), screens Home,
+      Forecast, Result, Method from the prototypes; every number comes from the
+      API (`src/api/client.ts`). Changed from the prototypes to follow the
+      rules and the data: naive is the reference (prototype named
+      XGBoost-MS-RFE); horizon fixed at one month; no copra grades, monthly
+      high/low or local volume (not in the data); Method "Pipeline" lists all
+      six compared models with their test RMSE/MAPE from `/metrics`; tech
+      stack corrected (prototype said Dart/Flutter). Backend: new
+      `GET /prices/areas` (area prices for the Home cards) and optional
+      `CORS_ORIGINS` for the Expo web preview. Checked in Expo web against the
+      real API with headless Chrome screenshots; app typecheck clean; backend
+      52 unit + 8 e2e tests pass.
+
 ## Next up
 
-1. Build the Expo app in `frontend-mobile/` (after deciding O1); it only needs
-   the read endpoints. If O1 = Expo web, enable CORS in `configureApp`.
+1. Try the app on a real phone with Expo Go (iOS and Android); no simulator
+   was available, so only the web preview has been checked.
 2. GitHub Actions workflow to run `ml-service-fastapi/forecast.py` on demand and monthly.
 3. Before deploying (O2): rate limiting and `helmet` on the API.
 
 ## Open issues
+
+- Manuscript scope says "mobile-responsive web dashboard"; D10 makes it a
+  mobile app. Update the manuscript (and tell the adviser).
+- App: the prototype's hamburger menu, avatar ("JD"), "Share snapshot" QR and
+  chart pinch-to-zoom were left out (no feature behind them yet); the chart
+  supports drag-to-read instead.
+- The "Results BOTTOM" prototype screenshot (10.06.08 AM) was not found; the
+  Result screen was designed from the other screens.
 
 - `/forecast/latest` does not flag a stale forecast: after new monthly data is
   entered but before the next run, `targetMonth` is already observed. The app
@@ -149,7 +171,6 @@ Update this file at the end of every work session.
   is `.venv/bin/`, not `.venv/Scripts/` (Windows).
 - Live runs should come from one machine (or GitHub Actions): XGBoost refits
   differ between Mac and Windows, so the comparison forecasts would change.
-- O1: web dashboard vs mobile app (see `docs/architecture.md`).
 - D4 (refitting trained models monthly) needs adviser confirmation.
 - FastAPI runner jobs live in memory: a restart while a live job is running
   leaves its `model_runs` row in `running`. Fine at monthly cadence; mark stale

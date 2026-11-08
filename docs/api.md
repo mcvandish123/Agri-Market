@@ -20,6 +20,24 @@ unrounded prices (63.033333), so it can differ by 0.01 from one computed with th
 rounded values. `previousPricePhpKg` and `changePct` are `null` if only one month
 is observed; 404 if none.
 
+### GET /prices/areas
+Each PCA reporting area's price in the latest valid month and the month before
+(observed prices; forecasts exist only for the regional average).
+```json
+{
+  "month": "2025-12-01",
+  "previousMonth": "2025-11-01",
+  "areas": [
+    { "area": "davao_city", "name": "Davao City", "pricePhpKg": 60.84,
+      "previousPricePhpKg": 64.06, "changePct": -5.03 }
+  ]
+}
+```
+Always six areas, in the order davao_city, davao_de_oro, davao_del_norte,
+davao_del_sur, davao_occidental, davao_oriental. A missing area price is `null`
+(and so is its `changePct`). Months flagged `price_valid = false` are skipped.
+404 if there is no valid month. Source: `monthly_data`.
+
 ### GET /prices/history?from=2019-01-01&to=2025-12-01
 ```json
 [ { "month": "2019-01-01", "pricePhpKg": 18.76 }, ... ]
