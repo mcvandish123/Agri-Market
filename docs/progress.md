@@ -139,6 +139,13 @@ Update this file at the end of every work session.
       real API with headless Chrome screenshots; app typecheck clean; backend
       52 unit + 8 e2e tests pass.
 
+- [x] 2026-11-08: `POST /admin/monthly-data` verified on the real Supabase: one
+      test row (2017-01-01) inserted through the API, checked (stored values,
+      generated average, server-side VPD, public read, latest price and forecast
+      unchanged), then deleted; 96 rows restored. Invalid requests return
+      401/400 and write nothing. Insert path only; update of an existing month
+      was not tried on the real data.
+
 ## Next up
 
 1. Try the app on a real phone with Expo Go (iOS and Android); no simulator
@@ -161,9 +168,15 @@ Update this file at the end of every work session.
   can compare `dataThrough` with `/prices/latest`; or add an `isStale` field.
 - `database.types.ts` is hand-written; regenerate or update it with every
   migration (`supabase gen types typescript` needs the Supabase CLI).
-- `POST /admin/monthly-data` has not been run against Supabase (tests use a
-  fake database, so the shared data stays unchanged). Try it once on a test
-  month with your friend, then delete that row.
+- Mobile QA from reading the code and bundling (2026-11-08; phone test still to do):
+  `expo-font` is 58.0.11 for `@expo/vector-icons` but 14.0.12 for Expo SDK 54
+  (`expo-doctor` fails; fix with `npx expo install expo-font`, icons may break);
+  "Next month" labels show January 2026 although the forecast run is from
+  October 2026; the Home price badge is an unlabeled change over the selected
+  range (+33.6% on 1Y) next to month-over-month area badges; the Forecast tab
+  has no retry if the first load fails; the Result chart stays on "Loading"
+  if the history call fails; the header status dot only checks on mount; the
+  Home teaser has no stale-forecast notice (Result has one).
 
 - Secrets (service-role key, DB password, admin and ML keys) were shared in a
   chat on 2026-11-07; rotate them and share new ones via a password manager.
