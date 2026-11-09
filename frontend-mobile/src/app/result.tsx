@@ -5,7 +5,17 @@ import { useApi } from '@/api/useApi';
 import type { LatestForecast } from '@/api/types';
 import { AppHeader } from '@/components/AppHeader';
 import { LineChart } from '@/components/LineChart';
-import { Card, ChangeBadge, ErrorState, Loading, Notice, SectionTitle, Stat, Tag } from '@/components/ui';
+import {
+  Card,
+  ChangeBadge,
+  ErrorState,
+  Loading,
+  Notice,
+  RefreshFailedNotice,
+  SectionTitle,
+  Stat,
+  Tag,
+} from '@/components/ui';
 import { REGION } from '@/lib/areas';
 import {
   forecastOutlook,
@@ -86,6 +96,8 @@ export default function ResultScreen() {
             Davao Region average · based on prices through {monthLong(f.dataThrough)}
           </Text>
         </View>
+
+        <RefreshFailedNotice sources={[forecast, latest, areas, history]} />
 
         {stale && (
           <Notice tone="amber">
@@ -196,6 +208,8 @@ export default function ResultScreen() {
               forecast={{ month: f.targetMonth, value: ref, low: f.typicalError.low, high: f.typicalError.high }}
               height={200}
             />
+          ) : history.error ? (
+            <ErrorState message={history.error.message} onRetry={() => void history.refresh()} />
           ) : (
             <Loading label="Loading prices…" />
           )}

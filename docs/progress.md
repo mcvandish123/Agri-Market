@@ -175,18 +175,16 @@ Update this file at the end of every work session.
   horizontal padding left no width inside the tab bar's 31pt icon slot on native;
   fixed width instead); `expo-font` pinned to SDK 54; forecast labels no longer say "next month" when the target month has
   passed, with a note explaining the data needed.
-  Still open: the Home price badge is an unlabeled change over the selected range
-  next to month-over-month area badges; the Forecast tab has no retry if the first
-  load fails; the Result chart stays on "Loading" if the history call fails; the
-  header status dot only checks on mount; the Home card has no stale-forecast
-  notice; a failed pull-to-refresh on Home shows no message.
+  Fixed and rechecked on the phone: Home badge names its period; Forecast tab has
+  retry and pull-to-refresh; header dot rechecks on focus and every 30 s; a failed
+  refresh shows a notice. Fixed in code only: Result chart error with retry; Home
+  stale-forecast notice.
 - The forecast shows January 2026 because `monthly_data` ends at December 2025.
   A forecast for a later month needs every month up to the one before it entered
   (no gaps: lags and the 12-month VPD sum need consecutive months), then a live run.
-- `POST /admin/monthly-data` accepts any first-of-month date, including future
-  months: a mistyped year would become the latest price everywhere.
-- `npm audit --omit=dev`: backend 5 (1 critical `proxy-addr`, 3 high), all with
-  fixes available; run `npm audit fix` and retest before deploying. Mobile 27,
+- `POST /admin/monthly-data` now rejects months after the current month (Philippine
+  time). Existing months can still be overwritten by design (upsert).
+- `npm audit --omit=dev`: backend 0 after `npm audit fix` (2026-11-09). Mobile 27,
   several only fixable by moving to a newer Expo SDK.
 - A release build without `EXPO_PUBLIC_API_URL` falls back to
   `http://localhost:3000`; set an HTTPS API URL for any real build.

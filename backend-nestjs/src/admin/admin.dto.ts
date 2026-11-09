@@ -9,7 +9,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { IsFirstOfMonth } from '../common/first-of-month';
+import { IsFirstOfMonth, IsNotFutureMonth } from '../common/first-of-month';
 
 // Upper bounds follow the column precision in the migration (e.g. numeric(8,2)
 // holds < 1,000,000), so an out-of-range value is a 400 here, not a database error.
@@ -18,6 +18,7 @@ const finite = { allowNaN: false, allowInfinity: false };
 /** POST /admin/monthly-data. camelCase of the monthly_data columns. */
 export class MonthlyDataDto {
   @IsFirstOfMonth()
+  @IsNotFutureMonth()
   month!: string;
 
   // Farmgate copra prices, PHP/kg (PCA), numeric(8,2)

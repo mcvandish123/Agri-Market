@@ -111,7 +111,7 @@ Missing or wrong key: 401 (checked before the body is validated). Invalid body:
 Upsert one month of raw data into `monthly_data`. Body (camelCase of the table
 columns): `month`, the six area prices, `cpiRegion11`, `tempC`, `rhPct`,
 `rainMm`, the four oil prices, `phpUsd`, optional `sourceNote`. Validate:
-`month` is a first-of-month date, prices > 0, `rhPct` 0-100, `rainMm` >= 0.
+`month` is a first-of-month date not after the current month (Philippine time), prices > 0, `rhPct` 0-100, `rainMm` >= 0.
 `vpdKpa` is computed server-side with the Tetens equation (same formula as
 `ml-service-fastapi/features.py`), rounded to 6 decimals. All fields except
 `sourceNote` are required. An existing month keeps its `priceValid` flag.

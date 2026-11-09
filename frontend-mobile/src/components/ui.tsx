@@ -18,13 +18,13 @@ export function SectionTitle({ title, subtitle }: { title: string; subtitle?: st
 }
 
 /** Green for a rise, red for a fall, grey for no change or unknown. */
-export function ChangeBadge({ pct }: { pct: number | null }) {
+export function ChangeBadge({ pct, period }: { pct: number | null; period?: string }) {
   const tone = pct == null || pct === 0 ? 'flat' : pct > 0 ? 'up' : 'down';
   const bg = tone === 'up' ? colors.greenSoft : tone === 'down' ? colors.redSoft : colors.muted;
   const fg = tone === 'up' ? colors.greenDark : tone === 'down' ? colors.red : colors.textMuted;
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
-      <Text style={[styles.badgeText, { color: fg }]}>{pct == null ? '—' : signedPct(pct, 1)}</Text>
+      <Text style={[styles.badgeText, { color: fg }]}>{pct == null ? '—' : `${signedPct(pct, 1)}${period ? ` · ${period}` : ''}`}</Text>
     </View>
   );
 }
@@ -106,6 +106,12 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry: () 
       </Pressable>
     </Card>
   );
+}
+
+/** Shown when a refresh failed but previously loaded data is still on screen. */
+export function RefreshFailedNotice({ sources }: { sources: { data: unknown; error: unknown }[] }) {
+  if (!sources.some((s) => s.error && s.data)) return null;
+  return <Notice tone="amber">Could not update. Showing the last loaded data; pull down to try again.</Notice>;
 }
 
 export function Notice({ children, tone = 'grey' }: { children: ReactNode; tone?: 'grey' | 'amber' }) {

@@ -7,7 +7,17 @@ import { useApi } from '@/api/useApi';
 import type { AreaPrice, PricePoint } from '@/api/types';
 import { AppHeader } from '@/components/AppHeader';
 import { LineChart } from '@/components/LineChart';
-import { Card, ChangeBadge, Chip, ErrorState, Loading, SectionTitle, Stat, Tag } from '@/components/ui';
+import {
+  Card,
+  ChangeBadge,
+  Chip,
+  ErrorState,
+  Loading,
+  RefreshFailedNotice,
+  SectionTitle,
+  Stat,
+  Tag,
+} from '@/components/ui';
 import { forecastEyebrow, monthLong, monthName, monthsBefore, peso, signedPeso } from '@/lib/format';
 import { colors, radius, space, type } from '@/theme';
 
@@ -60,6 +70,8 @@ export default function HomeScreen() {
   );
   const rangeChange =
     shown.length > 1 ? ((shown[shown.length - 1].pricePhpKg - shown[0].pricePhpKg) / shown[0].pricePhpKg) * 100 : null;
+  // New monthly data arrived but the forecast job has not run since
+  const stale = latest.data !== null && forecast.data !== null && latest.data.month >= forecast.data.targetMonth;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -68,14 +80,16 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing && latest.data !== null} onRefresh={refreshAll} />}
       >
+        <RefreshFailedNotice sources={[latest, history, areas, forecast]} />
+
         {/* Price card */}
         {latest.error && !latest.data ? (
           <ErrorState message={latest.error.message} onRetry={refreshAll} />
         ) : (
           <Card>
             <View style={styles.rowBetween}>
-              <Text style={type.small}>Davao Region Farmgate Prices</Text>
-              <ChangeBadge pct={rangeChange} />
+              <Text style={[type.small, { flex: 1 }]}>Davao Region Farmgate Prices</Text>
+              <ChangeBadge pct={rangeChange} period={range} />
             </View>
             {latest.data ? (
               <>
@@ -114,6 +128,12 @@ export default function HomeScreen() {
                 <Text style={type.small}>
                   Reference forecast · typical error ±{peso(forecast.data.typicalError.pricePhpKg)}
                 </Text>
+                {stale && (
+                  <Text style={[type.small, { color: colors.amber, marginTop: space.xs }]}>
+                    Prices for {monthLong(latest.data!.month)} are already in. An updated forecast will appear after the
+                    next monthly update.
+                  </Text>
+                )}
               </View>
               <View style={{ alignItems: 'flex-end', gap: space.sm }}>
                 <Tag

@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { api } from '@/api/client';
 import { useApi } from '@/api/useApi';
 import { AppHeader } from '@/components/AppHeader';
 import { Option, Select } from '@/components/Select';
-import { Notice, PrimaryButton } from '@/components/ui';
+import { ErrorState, Notice, PrimaryButton } from '@/components/ui';
 import { REGION } from '@/lib/areas';
 import { monthLong, outdatedForecastNote } from '@/lib/format';
 import { colors, radius, space, type } from '@/theme';
@@ -33,12 +33,20 @@ export default function ForecastScreen() {
 
   const target = forecast.data?.targetMonth;
   const unavailable = forecast.error?.status === 404;
+  const refreshAll = () => {
+    void areas.refresh();
+    void forecast.refresh();
+  };
   const outdated = forecast.data ? outdatedForecastNote(forecast.data.targetMonth, forecast.data.dataThrough) : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <AppHeader />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refreshAll} />}
+      >
         <Text style={type.title}>Forecast</Text>
         <Text style={[type.title, { color: colors.green, marginTop: -4 }]}>copra prices.</Text>
         <Text style={[type.body, { color: colors.textMuted, marginTop: space.md }]}>
@@ -76,7 +84,7 @@ export default function ForecastScreen() {
           </View>
         ) : forecast.error ? (
           <View style={{ marginTop: space.lg }}>
-            <Notice tone="amber">{forecast.error.message}</Notice>
+            <ErrorState message={forecast.error.message} onRetry={refreshAll} />
           </View>
         ) : null}
       </ScrollView>
