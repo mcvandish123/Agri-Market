@@ -7,7 +7,17 @@ import { AppHeader } from '@/components/AppHeader';
 import { LineChart } from '@/components/LineChart';
 import { Card, ChangeBadge, ErrorState, Loading, Notice, SectionTitle, Stat, Tag } from '@/components/ui';
 import { REGION } from '@/lib/areas';
-import { MODEL_LABELS, monthLong, monthName, monthShort, monthsBefore, peso, signedPeso } from '@/lib/format';
+import {
+  forecastOutlook,
+  MODEL_LABELS,
+  monthLong,
+  monthName,
+  monthShort,
+  monthsBefore,
+  outdatedForecastNote,
+  peso,
+  signedPeso,
+} from '@/lib/format';
 import { colors, radius, space, type } from '@/theme';
 
 /**
@@ -60,6 +70,7 @@ export default function ResultScreen() {
   const selectedArea = area !== REGION ? areas.data?.areas.find((a) => a.area === area) : undefined;
   // New monthly data arrived but the forecast job has not run since
   const stale = latest.data !== null && latest.data.month >= f.targetMonth;
+  const outdated = outdatedForecastNote(f.targetMonth, f.dataThrough);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -69,7 +80,7 @@ export default function ResultScreen() {
         refreshControl={<RefreshControl refreshing={false} onRefresh={refreshAll} />}
       >
         <View>
-          <Text style={type.eyebrow}>Next month outlook</Text>
+          <Text style={type.eyebrow}>{forecastOutlook(f.targetMonth)}</Text>
           <Text style={[type.title, { marginTop: 4 }]}>{monthLong(f.targetMonth)}</Text>
           <Text style={[type.small, { marginTop: 4 }]}>
             Davao Region average · based on prices through {monthLong(f.dataThrough)}
@@ -82,6 +93,8 @@ export default function ResultScreen() {
             monthly update.
           </Notice>
         )}
+
+        {!stale && outdated && <Notice tone="amber">{outdated}</Notice>}
 
         {/* Reference forecast */}
         <Card>
@@ -175,7 +188,7 @@ export default function ResultScreen() {
 
         {/* Chart */}
         <Card>
-          <Text style={type.h3}>Last 12 months and next month</Text>
+          <Text style={type.h3}>Last 12 months and forecast</Text>
           <Text style={[type.small, { marginBottom: space.sm }]}>PHP per kg · shaded area = typical error</Text>
           {history.data ? (
             <LineChart

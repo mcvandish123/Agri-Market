@@ -8,7 +8,7 @@ import type { AreaPrice, PricePoint } from '@/api/types';
 import { AppHeader } from '@/components/AppHeader';
 import { LineChart } from '@/components/LineChart';
 import { Card, ChangeBadge, Chip, ErrorState, Loading, SectionTitle, Stat, Tag } from '@/components/ui';
-import { monthLong, monthName, monthsBefore, peso, signedPeso } from '@/lib/format';
+import { forecastEyebrow, monthLong, monthName, monthsBefore, peso, signedPeso } from '@/lib/format';
 import { colors, radius, space, type } from '@/theme';
 
 const RANGES = [
@@ -109,7 +109,7 @@ export default function HomeScreen() {
           <Pressable onPress={() => router.push('/forecast')} accessibilityRole="button">
             <Card style={styles.teaser}>
               <View style={{ flex: 1 }}>
-                <Text style={type.eyebrow}>Next month · {monthName(forecast.data.targetMonth)}</Text>
+                <Text style={type.eyebrow}>{forecastEyebrow(forecast.data.targetMonth)}</Text>
                 <Text style={styles.teaserPrice}>{peso(forecast.data.reference.pricePhpKg)}</Text>
                 <Text style={type.small}>
                   Reference forecast · typical error ±{peso(forecast.data.typicalError.pricePhpKg)}

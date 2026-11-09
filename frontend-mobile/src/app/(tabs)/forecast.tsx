@@ -8,7 +8,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { Option, Select } from '@/components/Select';
 import { Notice, PrimaryButton } from '@/components/ui';
 import { REGION } from '@/lib/areas';
-import { monthLong } from '@/lib/format';
+import { monthLong, outdatedForecastNote } from '@/lib/format';
 import { colors, radius, space, type } from '@/theme';
 
 /**
@@ -33,6 +33,7 @@ export default function ForecastScreen() {
 
   const target = forecast.data?.targetMonth;
   const unavailable = forecast.error?.status === 404;
+  const outdated = forecast.data ? outdatedForecastNote(forecast.data.targetMonth, forecast.data.dataThrough) : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -41,7 +42,7 @@ export default function ForecastScreen() {
         <Text style={type.title}>Forecast</Text>
         <Text style={[type.title, { color: colors.green, marginTop: -4 }]}>copra prices.</Text>
         <Text style={[type.body, { color: colors.textMuted, marginTop: space.md }]}>
-          Choose an area, then see next month’s reference forecast for Davao Region copra.
+          Choose an area, then see the latest reference forecast for Davao Region copra.
         </Text>
 
         <Text style={styles.label}>Area</Text>
@@ -55,6 +56,11 @@ export default function ForecastScreen() {
           {target ? <Text style={styles.fixedHint}>{monthLong(target)}</Text> : null}
         </View>
         <Text style={styles.help}>The study evaluated one-month-ahead forecasts, so the app forecasts one month.</Text>
+        {outdated ? (
+          <View style={{ marginTop: space.md }}>
+            <Notice tone="amber">{outdated}</Notice>
+          </View>
+        ) : null}
 
         <View style={{ marginTop: space.xxl }}>
           <PrimaryButton

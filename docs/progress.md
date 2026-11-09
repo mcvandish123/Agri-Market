@@ -168,15 +168,28 @@ Update this file at the end of every work session.
   can compare `dataThrough` with `/prices/latest`; or add an `isStale` field.
 - `database.types.ts` is hand-written; regenerate or update it with every
   migration (`supabase gen types typescript` needs the Supabase CLI).
-- Mobile QA from reading the code and bundling (2026-11-08; phone test still to do):
-  `expo-font` is 58.0.11 for `@expo/vector-icons` but 14.0.12 for Expo SDK 54
-  (`expo-doctor` fails; fix with `npx expo install expo-font`, icons may break);
-  "Next month" labels show January 2026 although the forecast run is from
-  October 2026; the Home price badge is an unlabeled change over the selected
-  range (+33.6% on 1Y) next to month-over-month area badges; the Forecast tab
-  has no retry if the first load fails; the Result chart stays on "Loading"
-  if the history call fails; the header status dot only checks on mount; the
-  Home teaser has no stale-forecast notice (Result has one).
+- Mobile QA, Android phone with Expo Go SDK 54 (2026-11-08/09; iOS untested, a physical
+  iPhone needs `eas go` + TestFlight because the App Store Expo Go is SDK 58).
+  Screens, values, peso sign, chart drag, refresh and the offline message passed.
+  Fixed and rechecked on the phone: missing tab icons (the pill's 36pt of
+  horizontal padding left no width inside the tab bar's 31pt icon slot on native;
+  fixed width instead); `expo-font` pinned to SDK 54; forecast labels no longer say "next month" when the target month has
+  passed, with a note explaining the data needed.
+  Still open: the Home price badge is an unlabeled change over the selected range
+  next to month-over-month area badges; the Forecast tab has no retry if the first
+  load fails; the Result chart stays on "Loading" if the history call fails; the
+  header status dot only checks on mount; the Home card has no stale-forecast
+  notice; a failed pull-to-refresh on Home shows no message.
+- The forecast shows January 2026 because `monthly_data` ends at December 2025.
+  A forecast for a later month needs every month up to the one before it entered
+  (no gaps: lags and the 12-month VPD sum need consecutive months), then a live run.
+- `POST /admin/monthly-data` accepts any first-of-month date, including future
+  months: a mistyped year would become the latest price everywhere.
+- `npm audit --omit=dev`: backend 5 (1 critical `proxy-addr`, 3 high), all with
+  fixes available; run `npm audit fix` and retest before deploying. Mobile 27,
+  several only fixable by moving to a newer Expo SDK.
+- A release build without `EXPO_PUBLIC_API_URL` falls back to
+  `http://localhost:3000`; set an HTTPS API URL for any real build.
 
 - Secrets (service-role key, DB password, admin and ML keys) were shared in a
   chat on 2026-11-07; rotate them and share new ones via a password manager.

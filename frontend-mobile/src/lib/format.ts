@@ -52,6 +52,39 @@ export const monthsBefore = (month: string, months: number) => {
   return `${y}-${String(m).padStart(2, '0')}-01`;
 };
 
+/** Where a forecast's target month falls relative to the calendar month of `now`. */
+export const forecastTiming = (targetMonth: string, now = new Date()): 'next' | 'current' | 'past' => {
+  const { year, index } = parts(targetMonth);
+  const diff = year * 12 + index - (now.getFullYear() * 12 + now.getMonth());
+  return diff < 0 ? 'past' : diff === 0 ? 'current' : 'next';
+};
+
+/** Home card label, e.g. 'Next month · December' or 'Latest forecast · January 2026'. */
+export const forecastEyebrow = (targetMonth: string, now = new Date()) => {
+  const timing = forecastTiming(targetMonth, now);
+  if (timing === 'past') return `Latest forecast · ${monthLong(targetMonth)}`;
+  return `${timing === 'next' ? 'Next month' : 'This month'} · ${monthName(targetMonth)}`;
+};
+
+/** Result screen heading above the target month. */
+export const forecastOutlook = (targetMonth: string, now = new Date()) =>
+  ({ next: 'Next month outlook', current: 'This month outlook', past: 'Latest available forecast' })[
+    forecastTiming(targetMonth, now)
+  ];
+
+/**
+ * Explains a forecast whose target month has already passed. Forecasts use only
+ * prices observed the month before (CLAUDE.md rule 1), so a newer one needs newer data.
+ */
+export const outdatedForecastNote = (targetMonth: string, dataThrough: string, now = new Date()): string | null => {
+  if (forecastTiming(targetMonth, now) !== 'past') return null;
+  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  return (
+    `Prices are available only through ${monthLong(dataThrough)}, so ${monthLong(targetMonth)} is the newest forecast. ` +
+    `A ${monthLong(monthsBefore(current, -1))} forecast needs prices through ${monthLong(current)}.`
+  );
+};
+
 export const MODEL_LABELS: Record<ModelName, string> = {
   naive: 'Naive',
   sarimax: 'SARIMAX',
