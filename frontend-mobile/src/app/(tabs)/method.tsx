@@ -3,7 +3,7 @@ import { api } from '@/api/client';
 import { useApi } from '@/api/useApi';
 import type { MetricRow, ModelName } from '@/api/types';
 import { AppHeader } from '@/components/AppHeader';
-import { Card, ErrorState, Notice, Tag } from '@/components/ui';
+import { Card, ErrorState, Notice, RefreshFailedNotice, Tag } from '@/components/ui';
 import { MODEL_LABELS, peso } from '@/lib/format';
 import { colors, radius, space, type } from '@/theme';
 
@@ -82,6 +82,8 @@ export default function MethodScreen() {
           <Text style={type.h2}>Methodology & Architecture</Text>
           <Text style={type.small}>How the forecasts are made</Text>
         </View>
+
+        <RefreshFailedNotice sources={[metrics]} />
 
         <Card>
           <Text style={[type.h3, styles.cardTitle]}>Introduction</Text>

@@ -5,12 +5,17 @@ import { colors, radius } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-/** Tab icon inside a soft green pill when active, as in the prototype. */
+/**
+ * Tab icon inside a soft green pill when active, as in the prototype. The pill
+ * needs a fixed width: the tab bar's icon slot is only about 31 wide, so
+ * horizontal padding would leave the icon no width on a phone.
+ */
 function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
   return (
     <View
       style={{
-        paddingHorizontal: 18,
+        width: 56,
+        alignItems: 'center',
         paddingVertical: 4,
         borderRadius: radius.pill,
         backgroundColor: focused ? colors.greenSoft : 'transparent',

@@ -139,6 +139,13 @@ Update this file at the end of every work session.
       real API with headless Chrome screenshots; app typecheck clean; backend
       52 unit + 8 e2e tests pass.
 
+- [x] 2026-11-08: `POST /admin/monthly-data` verified on the real Supabase: one
+      test row (2017-01-01) inserted through the API, checked (stored values,
+      generated average, server-side VPD, public read, latest price and forecast
+      unchanged), then deleted; 96 rows restored. Invalid requests return
+      401/400 and write nothing. Insert path only; update of an existing month
+      was not tried on the real data.
+
 ## Next up
 
 1. Try the app on a real phone with Expo Go (iOS and Android); no simulator
@@ -161,9 +168,26 @@ Update this file at the end of every work session.
   can compare `dataThrough` with `/prices/latest`; or add an `isStale` field.
 - `database.types.ts` is hand-written; regenerate or update it with every
   migration (`supabase gen types typescript` needs the Supabase CLI).
-- `POST /admin/monthly-data` has not been run against Supabase (tests use a
-  fake database, so the shared data stays unchanged). Try it once on a test
-  month with your friend, then delete that row.
+- Mobile QA, Android phone with Expo Go SDK 54 (2026-11-08/09; iOS untested, a physical
+  iPhone needs `eas go` + TestFlight because the App Store Expo Go is SDK 58).
+  Screens, values, peso sign, chart drag, refresh and the offline message passed.
+  Fixed and rechecked on the phone: missing tab icons (the pill's 36pt of
+  horizontal padding left no width inside the tab bar's 31pt icon slot on native;
+  fixed width instead); `expo-font` pinned to SDK 54; forecast labels no longer say "next month" when the target month has
+  passed, with a note explaining the data needed.
+  Fixed and rechecked on the phone: Home badge names its period; Forecast tab has
+  retry and pull-to-refresh; header dot rechecks on focus and every 30 s; a failed
+  refresh shows a notice. Fixed in code only: Result chart error with retry; Home
+  stale-forecast notice.
+- The forecast shows January 2026 because `monthly_data` ends at December 2025.
+  A forecast for a later month needs every month up to the one before it entered
+  (no gaps: lags and the 12-month VPD sum need consecutive months), then a live run.
+- `POST /admin/monthly-data` now rejects months after the current month (Philippine
+  time). Existing months can still be overwritten by design (upsert).
+- `npm audit --omit=dev`: backend 0 after `npm audit fix` (2026-11-09). Mobile 27,
+  several only fixable by moving to a newer Expo SDK.
+- A release build without `EXPO_PUBLIC_API_URL` falls back to
+  `http://localhost:3000`; set an HTTPS API URL for any real build.
 
 - Secrets (service-role key, DB password, admin and ML keys) were shared in a
   chat on 2026-11-07; rotate them and share new ones via a password manager.
